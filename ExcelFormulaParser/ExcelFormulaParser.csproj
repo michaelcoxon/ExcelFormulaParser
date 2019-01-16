@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <PackageProjectUrl>https://github.com/michaelcoxon/ExcelFormulaParser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/michaelcoxon/ExcelFormulaParser.git</RepositoryUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/michaelcoxon/ExcelFormulaParser/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Copyright 2019</Copyright>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
