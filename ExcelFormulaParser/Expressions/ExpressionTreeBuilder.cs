@@ -1,12 +1,13 @@
 ﻿// https://github.com/psalaets/excel-formula-ast/blob/master/lib/build-tree.js
 
+using ExcelFormulaParser.FormulaTokenizer;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace ExcelFormulaParser.Tree
+namespace ExcelFormulaParser.Expressions
 {
-    public class TreeBuilder
+    public class ExpressionTreeBuilder
     {
         private static readonly Dictionary<string, byte> _precendence = new Dictionary<string, byte>
         {
@@ -37,24 +38,24 @@ namespace ExcelFormulaParser.Tree
             ["<"] = 1
         };
 
-        public Token ParseFormula(Token[] tokens)
+        public static Expression ParseFormula(Token[] tokens)
         {
             var stream = new TokenStream(tokens);
             var shuntingYard = new ShuntingYard.ShuntingYard();
 
-            this.ParseExpression(stream, shuntingYard);
+            ParseExpression(stream, shuntingYard);
 
             var retVal = shuntingYard.operands.Peek();
-            if (retVal != null)
+            if (retVal == null)
             {
                 throw new Exception("Syntax error");
             }
             return retVal;
         }
 
-        public void ParseExpression(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
+        private static void ParseExpression(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
         {
-            this.ParseOperandExpression(stream, shuntingYard);
+            ParseOperandExpression(stream, shuntingYard);
 
             var pos = 0;
             while (true)
@@ -68,60 +69,60 @@ namespace ExcelFormulaParser.Tree
                     throw new Exception("Invalid syntax!");
                 }
                 pos = stream.Pos();
-                this.PushOperator(this.CreateBinaryOperator((string)stream.GetNext().Value), shuntingYard);
+                PushOperator(CreateBinaryOperator(stream.GetNext().Value), shuntingYard);
                 stream.Consume();
-                this.ParseOperandExpression(stream, shuntingYard);
+                ParseOperandExpression(stream, shuntingYard);
             }
 
             while (shuntingYard.operators.Peek() != ShuntingYard.Operator.SENTINEL)
             {
-                this.PopOperator(shuntingYard.operators, shuntingYard.operands);
+                PopOperator(shuntingYard.operators, shuntingYard.operands);
             }
         }
 
-        public void ParseOperandExpression(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
+        private static void ParseOperandExpression(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
         {
             if (stream.NextIsTerminal())
             {
-                shuntingYard.operands.Push(this.ParseTerminal(stream));
+                shuntingYard.operands.Push(ParseTerminal(stream));
                 // parseTerminal already consumes once so don"t need to consume on line below
                 // stream.consume()
             }
             else if (stream.NextIsOpenParen())
             {
                 stream.Consume(); // open paren
-                this.WithinSentinel(shuntingYard, () => this.ParseExpression(stream, shuntingYard));
+                WithinSentinel(shuntingYard, () => ParseExpression(stream, shuntingYard));
                 stream.Consume(); // close paren
             }
             else if (stream.NextIsPrefixOperator())
             {
-                var unaryOperator = this.CreateUnaryOperator((string)stream.GetNext().Value);
-                this.PushOperator(unaryOperator, shuntingYard);
+                var unaryOperator = CreateUnaryOperator(stream.GetNext().Value);
+                PushOperator(unaryOperator, shuntingYard);
                 stream.Consume();
-                this.ParseOperandExpression(stream, shuntingYard);
+                ParseOperandExpression(stream, shuntingYard);
             }
             else if (stream.NextIsFunctionCall())
             {
-                this.ParseFunctionCall(stream, shuntingYard);
+                ParseFunctionCall(stream, shuntingYard);
             }
         }
 
-        public void ParseFunctionCall(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
+        private static void ParseFunctionCall(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
         {
-            var name = (string)stream.GetNext().Value;
+            var name = stream.GetNext().Value;
             stream.Consume(); // consume start of function call
 
-            var args = this.ParseFunctionArgList(stream, shuntingYard);
-            shuntingYard.operands.Push(NodeBuilder.FunctionCall(name, args));
+            var args = ParseFunctionArgList(stream, shuntingYard);
+            shuntingYard.operands.Push(Expression.FunctionCall(name, args));
 
             stream.Consume(); // consume end of function call
         }
 
-        public Token[] ParseFunctionArgList(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
+        private static Expression[] ParseFunctionArgList(TokenStream stream, ShuntingYard.ShuntingYard shuntingYard)
         {
-            var reverseArgs = new List<Token>();
+            var reverseArgs = new List<Expression>();
 
-            this.WithinSentinel(shuntingYard, () =>
+            WithinSentinel(shuntingYard, () =>
             {
                 var arity = 0;
                 var pos = 0;
@@ -137,7 +138,7 @@ namespace ExcelFormulaParser.Tree
                         throw new Exception("Invalid syntax");
                     }
                     pos = stream.Pos();
-                    this.ParseExpression(stream, shuntingYard);
+                    ParseExpression(stream, shuntingYard);
                     arity += 1;
 
                     if (stream.NextIsFunctionArgumentSeparator())
@@ -157,23 +158,23 @@ namespace ExcelFormulaParser.Tree
             return reverseArgs.ToArray();
         }
 
-        public void WithinSentinel(ShuntingYard.ShuntingYard shuntingYard, Action fn)
+        private static void WithinSentinel(ShuntingYard.ShuntingYard shuntingYard, Action fn)
         {
             shuntingYard.operators.Push(ShuntingYard.Operator.SENTINEL);
             fn();
             shuntingYard.operators.Pop();
         }
 
-        public void PushOperator(ShuntingYard.Operator @operator, ShuntingYard.ShuntingYard shuntingYard)
+        private static void PushOperator(ShuntingYard.Operator @operator, ShuntingYard.ShuntingYard shuntingYard)
         {
             while (shuntingYard.operators.Peek().EvaluatesBefore(@operator))
             {
-                this.PopOperator(shuntingYard.operators, shuntingYard.operands);
+                PopOperator(shuntingYard.operators, shuntingYard.operands);
             }
             shuntingYard.operators.Push(@operator);
         }
 
-        public void PopOperator(Stack<ShuntingYard.Operator> operators, Stack<Token> operands)
+        private static void PopOperator(Stack<ShuntingYard.Operator> operators, Stack<Expression> operands)
         {
             if (operators.Peek().IsBinary())
             {
@@ -181,128 +182,128 @@ namespace ExcelFormulaParser.Tree
                 var left = operands.Pop();
 
                 var @operator = operators.Pop();
-                operands.Push(NodeBuilder.BinaryExpression(@operator.symbol, left, right));
+                operands.Push(Expression.BinaryExpression(BinaryOperatorTypeConverter(@operator.symbol), left, right));
             }
             else if (operators.Peek().IsUnary())
             {
                 var operand = operands.Pop();
 
                 var @operator = operators.Pop();
-                operands.Push(NodeBuilder.UnaryExpression(@operator.symbol, operand));
+                operands.Push(Expression.UnaryExpression(UnaryOperatorTypeConverter(@operator.symbol), operand));
             }
         }
 
-        public Token ParseTerminal(TokenStream stream)
+        private static Expression ParseTerminal(TokenStream stream)
         {
             if (stream.NextIsNumber())
             {
-                return this.ParseNumber(stream);
+                return ParseNumber(stream);
             }
 
             if (stream.NextIsText())
             {
-                return this.ParseText(stream);
+                return ParseText(stream);
             }
 
             if (stream.NextIsLogical())
             {
-                return this.ParseLogical(stream);
+                return ParseLogical(stream);
             }
 
             if (stream.NextIsRange())
             {
-                return this.ParseRange(stream);
+                return ParseRange(stream);
             }
 
             return null;
         }
 
-        public Token ParseRange(TokenStream stream)
+        private static Expression ParseRange(TokenStream stream)
         {
             var next = stream.GetNext();
             stream.Consume();
-            return this.CreateCellRange((string)next.Value);
+            return CreateCellRange(next.Value);
         }
 
-        public Token CreateCellRange(string value)
+        private static Expression CreateCellRange(string value)
         {
             var parts = value.Split(":");
 
             if (parts.Length == 2)
             {
-                return NodeBuilder.CellRange(
-                  NodeBuilder.Cell(parts[0], this.CellRefType(parts[0])),
-                  NodeBuilder.Cell(parts[1], this.CellRefType(parts[1]))
+                return Expression.CellRange(
+                  Expression.Cell(parts[0], CellRefType(parts[0])),
+                  Expression.Cell(parts[1], CellRefType(parts[1]))
                 );
             }
             else
             {
-                return NodeBuilder.Cell(value, this.CellRefType(value));
+                return Expression.Cell(value, CellRefType(value));
             }
         }
 
-        public string CellRefType(string key)
+        private static CellReferenceType CellRefType(string key)
         {
-            if (new Regex(@"^{\$}[A-Z]+\$\d+$").IsMatch(key))
+            if (new Regex(@"^\$[A-Z]+\$\d+$").IsMatch(key))
             {
-                return "absolute";
+                return CellReferenceType.Absolute;
             }
 
             if (new Regex(@"^\$[A-Z]+$").IsMatch(key))
             {
-                return "absolute";
+                return CellReferenceType.Absolute;
             }
 
             if (new Regex(@"^\$\d+$").IsMatch(key))
             {
-                return "absolute";
+                return CellReferenceType.Absolute;
             }
 
             if (new Regex(@"^\$[A-Z]+\d+$").IsMatch(key))
             {
-                return "mixed";
+                return CellReferenceType.Mixed;
             }
 
             if (new Regex(@"^[A-Z]+\$\d+$").IsMatch(key))
             {
-                return "mixed";
+                return CellReferenceType.Mixed;
             }
 
             if (new Regex(@"^[A-Z]+\d+$").IsMatch(key))
             {
-                return "relative";
+                return CellReferenceType.Relative;
             }
 
             if (new Regex(@"^\d+$").IsMatch(key))
             {
-                return "relative";
+                return CellReferenceType.Relative;
             }
 
             if (new Regex(@"^[A-Z]+$").IsMatch(key))
             {
-                return "relative";
+                return CellReferenceType.Relative;
             }
 
-            return null;
+            throw new NotSupportedException($"Cell with key '{key}' has an unsupported type");
         }
 
-        public Token ParseText(TokenStream stream)
+        private static TextExpression ParseText(TokenStream stream)
         {
             var next = stream.GetNext();
             stream.Consume();
-            return NodeBuilder.Text((string)next.Value);
+            return Expression.Text(next.Value);
         }
 
-        public Token ParseLogical(TokenStream stream)
+        private static LogicalExpression ParseLogical(TokenStream stream)
         {
             var next = stream.GetNext();
             stream.Consume();
-            return NodeBuilder.Logical((string)next.Value == "TRUE");
+            return Expression.Logical(next.Value == "TRUE");
         }
 
-        public Token ParseNumber(TokenStream stream)
+        private static NumberExpression ParseNumber(TokenStream stream)
         {
-            var value = (double)stream.GetNext().Value;
+            var value = double.Parse(stream.GetNext().Value);
             stream.Consume();
 
             if (stream.NextIsPostfixOperator())
@@ -311,10 +312,10 @@ namespace ExcelFormulaParser.Tree
                 stream.Consume();
             }
 
-            return NodeBuilder.Number(value);
+            return Expression.Number(value);
         }
 
-        public ShuntingYard.Operator CreateUnaryOperator(string symbol)
+        private static ShuntingYard.Operator CreateUnaryOperator(string symbol)
         {
             var precendence = new Dictionary<string, int>
             {
@@ -326,11 +327,42 @@ namespace ExcelFormulaParser.Tree
             return new ShuntingYard.Operator(symbol, precendence, 1, true);
         }
 
-        public ShuntingYard.Operator CreateBinaryOperator(string symbol)
+        private static ShuntingYard.Operator CreateBinaryOperator(string symbol)
         {
             var precendence = _precendence[symbol];
 
             return new ShuntingYard.Operator(symbol, precendence, 2, true);
+        }
+
+        private static UnaryOperatorType UnaryOperatorTypeConverter(string symbol)
+        {
+            switch (symbol) {
+                case "-":
+                    return UnaryOperatorType.Negate;
+                default:
+                    throw new NotSupportedException($"Unary operator '{symbol}' is not supported");
+            }
+        }
+
+        private static BinaryOperatorType BinaryOperatorTypeConverter(string symbol)
+        {
+            switch (symbol)
+            {
+                case "+":
+                    return BinaryOperatorType.Add;
+                case "&":
+                    return BinaryOperatorType.Concat;
+                case "<>":
+                    return BinaryOperatorType.NotEqualTo;
+                case ",":
+                    return BinaryOperatorType.Comma;
+                case " ":
+                    return BinaryOperatorType.Whitespace;
+                case "/":
+                    return BinaryOperatorType.Divide;
+                default:
+                    throw new NotSupportedException($"Binary operator '{symbol}' is not supported");
+            }
         }
     }
 }

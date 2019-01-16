@@ -1,6 +1,6 @@
 ﻿// https://github.com/psalaets/excel-formula-tokenizer/blob/master/languages.js
 
-namespace ExcelFormulaParser.Tree
+namespace ExcelFormulaParser.FormulaTokenizer
 {
     public class Language
     {

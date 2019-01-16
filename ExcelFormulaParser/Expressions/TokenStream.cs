@@ -1,27 +1,25 @@
 ﻿// https://github.com/psalaets/excel-formula-ast/blob/master/lib/token-stream.js
 
+using ExcelFormulaParser.FormulaTokenizer;
 using System;
 using System.Linq;
 
-namespace ExcelFormulaParser.Tree
+namespace ExcelFormulaParser.Expressions
 {
     public class TokenStream
     {
-        private readonly Token end;
-        private readonly Token[] arr;
-        private int index = 0;
-
+        private readonly Token[] _arr;
+        private int _index = 0;
 
         public TokenStream(Token[] tokens)
         {
-            this.end = new Token();
-            this.arr = tokens.Append(this.end).ToArray();
+            this._arr = tokens.Append(null).ToArray();
         }
 
         public void Consume()
         {
-            this.index += 1;
-            if (this.index >= this.arr.Length)
+            this._index += 1;
+            if (this._index >= this._arr.Length)
             {
                 throw new Exception("Invalid Syntax");
             }
@@ -29,17 +27,24 @@ namespace ExcelFormulaParser.Tree
 
         public Token GetNext()
         {
-            return this.arr[this.index];
+            return this._arr[this._index];
         }
 
-        public bool NextIs(TokenType type, string subtype = null)
+        public bool NextIs(TokenType type, TokenSubType? subType = null)
         {
+            var next = this.GetNext();
+
+            if (next is null)
+            {
+                return false;
+            }
+
             if (this.GetNext().Type != type)
             {
                 return false;
             }
 
-            if (subtype != null && this.GetNext().SubType != subtype)
+            if (subType != null && this.GetNext().SubType != subType)
             {
                 return false;
             }
@@ -49,7 +54,7 @@ namespace ExcelFormulaParser.Tree
 
         public bool NextIsOpenParen()
         {
-            return this.NextIs(TokenType.subexpression, "start");
+            return this.NextIs(TokenType.SubExpression, TokenSubType.Start);
         }
 
         public bool NextIsTerminal()
@@ -79,57 +84,57 @@ namespace ExcelFormulaParser.Tree
 
         public bool NextIsFunctionCall()
         {
-            return this.NextIs(TokenType.Function, "start");
+            return this.NextIs(TokenType.Function, TokenSubType.Start);
         }
 
         public bool NextIsFunctionArgumentSeparator()
         {
-            return this.NextIs(TokenType.argument);
+            return this.NextIs(TokenType.Argument);
         }
 
         public bool NextIsEndOfFunctionCall()
         {
-            return this.NextIs(TokenType.Function, "stop");
+            return this.NextIs(TokenType.Function, TokenSubType.Stop);
         }
 
         public bool NextIsBinaryOperator()
         {
-            return this.NextIs(TokenType.operatorInfix);
+            return this.NextIs(TokenType.OperatorInfix);
         }
 
         public bool NextIsPrefixOperator()
         {
-            return this.NextIs(TokenType.operatorPrefix);
+            return this.NextIs(TokenType.OperatorPrefix);
         }
 
         public bool NextIsPostfixOperator()
         {
-            return this.NextIs(TokenType.operatorPostfix);
+            return this.NextIs(TokenType.OperatorPostfix);
         }
 
         public bool NextIsRange()
         {
-            return this.NextIs(TokenType.operand, "range");
+            return this.NextIs(TokenType.Operand, TokenSubType.Range);
         }
 
         public bool NextIsNumber()
         {
-            return this.NextIs(TokenType.operand, "number");
+            return this.NextIs(TokenType.Operand, TokenSubType.Number);
         }
 
         public bool NextIsText()
         {
-            return this.NextIs(TokenType.operand, "text");
+            return this.NextIs(TokenType.Operand, TokenSubType.Text);
         }
 
         public bool NextIsLogical()
         {
-            return this.NextIs(TokenType.operand, "logical");
+            return this.NextIs(TokenType.Operand, TokenSubType.Logical);
         }
 
         public int Pos()
         {
-            return this.index;
+            return this._index;
         }
     }
 }

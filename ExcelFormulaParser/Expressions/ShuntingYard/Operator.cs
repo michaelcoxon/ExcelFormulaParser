@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ExcelFormulaParser.Tree.ShuntingYard
+namespace ExcelFormulaParser.Expressions.ShuntingYard
 {
     public class Operator
     {

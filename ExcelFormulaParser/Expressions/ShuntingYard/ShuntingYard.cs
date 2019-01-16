@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace ExcelFormulaParser.Tree.ShuntingYard
+namespace ExcelFormulaParser.Expressions.ShuntingYard
 {
     public class ShuntingYard
     {
-        public Stack<Token> operands = new Stack<Token>();
+        public Stack<Expression> operands = new Stack<Expression>();
         public Stack<Operator> operators = new Stack<Operator>();
 
         public ShuntingYard()
