@@ -350,6 +350,8 @@ namespace ExcelFormulaParser.Expressions
             {
                 case "+":
                     return BinaryOperatorType.Add;
+                case "-":
+                    return BinaryOperatorType.Subtract;
                 case "&":
                     return BinaryOperatorType.Concat;
                 case "<>":
@@ -360,6 +362,20 @@ namespace ExcelFormulaParser.Expressions
                     return BinaryOperatorType.Whitespace;
                 case "/":
                     return BinaryOperatorType.Divide;
+                case "^":
+                    return BinaryOperatorType.Pow;
+                case "*":
+                    return BinaryOperatorType.Multiply;
+                case "=":
+                    return BinaryOperatorType.EqualTo;
+                case "<=":
+                    return BinaryOperatorType.LessThanOrEqualTo;
+                case ">=":
+                    return BinaryOperatorType.GreaterThanOrEqualTo;
+                case ">":
+                    return BinaryOperatorType.GreaterThan;
+                case "<":
+                    return BinaryOperatorType.LessThan;
                 default:
                     throw new NotSupportedException($"Binary operator '{symbol}' is not supported");
             }

@@ -36,7 +36,15 @@ namespace ExcelFormulaParser.Expressions
         NotEqualTo,
         Comma,
         Whitespace,
-        Divide
+        Divide,
+        Subtract,
+        Pow,
+        Multiply,
+        EqualTo,
+        LessThanOrEqualTo,
+        GreaterThanOrEqualTo,
+        GreaterThan,
+        LessThan
     }
 
     public abstract class Expression
