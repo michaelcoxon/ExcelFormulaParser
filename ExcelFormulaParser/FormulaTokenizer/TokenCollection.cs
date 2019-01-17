@@ -2,7 +2,7 @@
 
 namespace ExcelFormulaParser.FormulaTokenizer
 {
-    public class TokenCollection
+    internal class TokenCollection
     {
         private readonly List<Token> _items;
         private int _index;

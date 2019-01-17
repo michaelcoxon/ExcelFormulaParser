@@ -38,22 +38,40 @@
         public TokenType Type;
         public TokenSubType? SubType;
 
-        /*
-        public string RefType;
-        public string Key;
-        public string Name;
-        public Token[] Arguments;
-        public Token Left;
-        public Token Right;
-        public string Operator;
-        public Token Operand;
-        */
-
         public Token(string value, TokenType type, TokenSubType? subType = null)
         {
             this.Value = value;
             this.Type = type;
             this.SubType = subType;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Token item))
+            {
+                return false;
+            }
+
+            return this.Type.Equals(item.Type)
+                && this.SubType.Equals(item.SubType)
+                && this.Value.Equals(item.Value)
+                ;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Type.GetHashCode()
+                ^ this.SubType.GetHashCode()
+                ^ this.Value.GetHashCode()
+                ;
+        }
+
+
+#if !DEBUG
+        public override string ToString()
+        {
+            return this.Value;
+        }
+#endif
     }
 }

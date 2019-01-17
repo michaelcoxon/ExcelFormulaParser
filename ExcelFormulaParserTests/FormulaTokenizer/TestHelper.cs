@@ -18,9 +18,7 @@ namespace ExcelFormulaParserTests.FormulaTokenizer
 
             for (var i = 0; i < actual.Length; i++)
             {
-                Assert.Equal(expected[i].Value, actual[i].Value);
-                Assert.Equal(expected[i].Type, actual[i].Type);
-                Assert.Equal(expected[i].SubType, actual[i].SubType);
+                Assert.Equal(expected[i], actual[i]);
             }
         }
     }

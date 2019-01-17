@@ -2,7 +2,7 @@
 
 namespace ExcelFormulaParser.FormulaTokenizer
 {
-    public class TokenStack
+    internal class TokenStack
     {
         private readonly Stack<Token> _items;
         public TokenStack()
