@@ -2,20 +2,50 @@
 
 namespace ExcelFormulaParser.FormulaTokenizer
 {
-    public class Language
+    internal static class BuiltinLanguages
     {
-        // value for true
-        public readonly string True = "TRUE";
-        // value for false
-        public readonly string False = "FALSE";
-        // separates function arguments
-        public readonly string ArgumentSeparator = ",";
-        // decimal point in numbers
-        public readonly string DecimalSeparator = ".";
-        // returns number string that can be parsed by Number()
-        public string ReformatNumberForJsParsing(string n)
+        private class LangEnglish : ILanguage
         {
-            return n;
+            public string True { get; } = "TRUE";
+            public string False { get; } = "FALSE";
+            public string ArgumentSeparator { get; } = ",";
+            public string DecimalSeparator { get; } = ".";
+            public string ReformatNumberForJsParsing(string n)
+            {
+                return n;
+            }
         }
+
+        public static ILanguage English = new LangEnglish();
+    }
+
+    public interface ILanguage
+    {
+        /// <summary>
+        /// Gets the value for true
+        /// </summary>
+        string True { get; }
+
+        /// <summary>
+        /// Gets the value for false  
+        /// </summary>
+        string False { get; }
+
+        /// <summary>
+        /// Gets the argument separator. Separates function arguments 
+        /// </summary>
+        string ArgumentSeparator { get; }
+
+        /// <summary>
+        /// Gets the decimal separator for numbers.
+        /// </summary>
+        string DecimalSeparator { get; }
+
+        /// <summary>
+        /// Reformats the number for js parsing. returns number string that can be parsed by <see cref="double.Parse(string)"/>
+        /// </summary>
+        /// <param name="n">The number.</param>
+        /// <returns></returns>
+        string ReformatNumberForJsParsing(string n);
     }
 }

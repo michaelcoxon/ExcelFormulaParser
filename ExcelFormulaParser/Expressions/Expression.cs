@@ -80,14 +80,9 @@ namespace ExcelFormulaParser.Expressions
 
         public static RangeExpression CellRange(Expression leftCell, Expression rightCell)
         {
-            if (leftCell == null)
-            {
-                throw new Exception("Invalid Syntax");
-            }
-            if (rightCell == null)
-            {
-                throw new Exception("Invalid Syntax");
-            }
+            Ensure.Arg(leftCell, nameof(leftCell)).IsNotNull();
+            Ensure.Arg(rightCell, nameof(rightCell)).IsNotNull();
+
             return new RangeExpression(leftCell, rightCell);
         }
 
@@ -113,23 +108,16 @@ namespace ExcelFormulaParser.Expressions
 
         public static BinaryExpression BinaryExpression(BinaryOperatorType @operator, Expression left, Expression right)
         {
-            if (left == null)
-            {
-                throw new Exception("Invalid Syntax");
-            }
-            if (right == null)
-            {
-                throw new Exception("Invalid Syntax");
-            }
+            Ensure.Arg(left, nameof(left)).IsNotNull();
+            Ensure.Arg(right, nameof(right)).IsNotNull();
+
             return new BinaryExpression(@operator, left, right);
         }
 
-        public static Expression UnaryExpression(UnaryOperatorType @operator, Expression expression)
+        public static UnaryExpression UnaryExpression(UnaryOperatorType @operator, Expression expression)
         {
-            if (expression == null)
-            {
-                throw new Exception("Invalid Syntax");
-            }
+            Ensure.Arg(expression, nameof(expression)).IsNotNull();
+
             return new UnaryExpression(@operator, expression);
         }
     }

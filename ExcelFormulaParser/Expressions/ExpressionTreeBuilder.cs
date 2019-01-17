@@ -7,9 +7,15 @@ using System.Text.RegularExpressions;
 
 namespace ExcelFormulaParser.Expressions
 {
-    public class ExpressionTreeBuilder
+    public sealed class ExpressionTreeBuilder
     {
-        private static readonly Dictionary<string, byte> _precendence = new Dictionary<string, byte>
+        private static readonly Dictionary<string, byte> _unaryExpressionTypePrecendence = new Dictionary<string, byte>
+        {
+            // negation
+            ["-"] = 7
+        };
+
+        private static readonly Dictionary<string, byte> _binaryExpessionTypeprecendence = new Dictionary<string, byte>
         {
             // cell range union and intersect
             [" "] = 8,
@@ -45,10 +51,15 @@ namespace ExcelFormulaParser.Expressions
 
             ParseExpression(stream, shuntingYard);
 
+            if (shuntingYard.operands.Count == 0)
+            {
+                throw new InvalidSyntaxException("There are no operands", 0);
+            }
+
             var retVal = shuntingYard.operands.Peek();
             if (retVal == null)
             {
-                throw new Exception("Syntax error");
+                throw new InvalidSyntaxException("There is no valid formula");
             }
             return retVal;
         }
@@ -66,7 +77,7 @@ namespace ExcelFormulaParser.Expressions
                 }
                 if (pos == stream.Pos())
                 {
-                    throw new Exception("Invalid syntax!");
+                    throw new InvalidSyntaxException(stream.CharPos());
                 }
                 pos = stream.Pos();
                 PushOperator(CreateBinaryOperator(stream.GetNext().Value), shuntingYard);
@@ -135,7 +146,7 @@ namespace ExcelFormulaParser.Expressions
 
                     if (pos == stream.Pos())
                     {
-                        throw new Exception("Invalid syntax");
+                        throw new InvalidSyntaxException(stream.CharPos());
                     }
                     pos = stream.Pos();
                     ParseExpression(stream, shuntingYard);
@@ -179,7 +190,10 @@ namespace ExcelFormulaParser.Expressions
             if (operators.Peek().IsBinary())
             {
                 var right = operands.Pop();
-                var left = operands.Pop();
+                if (!operands.TryPop(out var left))
+                {
+                    throw new InvalidSyntaxException("Missing left operand");
+                }
 
                 var @operator = operators.Pop();
                 operands.Push(Expression.BinaryExpression(BinaryOperatorTypeConverter(@operator.symbol), left, right));
@@ -317,26 +331,18 @@ namespace ExcelFormulaParser.Expressions
 
         private static ShuntingYard.Operator CreateUnaryOperator(string symbol)
         {
-            var precendence = new Dictionary<string, int>
-            {
-                // negation
-                ["-"] = 7
-            }
-            [symbol];
-
-            return new ShuntingYard.Operator(symbol, precendence, 1, true);
+            return new ShuntingYard.Operator(symbol, _unaryExpressionTypePrecendence[symbol], 1, true);
         }
 
         private static ShuntingYard.Operator CreateBinaryOperator(string symbol)
         {
-            var precendence = _precendence[symbol];
-
-            return new ShuntingYard.Operator(symbol, precendence, 2, true);
+            return new ShuntingYard.Operator(symbol, _binaryExpessionTypeprecendence[symbol], 2, true);
         }
 
         private static UnaryOperatorType UnaryOperatorTypeConverter(string symbol)
         {
-            switch (symbol) {
+            switch (symbol)
+            {
                 case "-":
                     return UnaryOperatorType.Negate;
                 default:

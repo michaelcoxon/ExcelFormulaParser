@@ -2,7 +2,7 @@
 
 namespace ExcelFormulaParser.Expressions.ShuntingYard
 {
-    public class Operator
+    internal class Operator
     {
         public static readonly Operator SENTINEL = new Operator("S", 0);
 

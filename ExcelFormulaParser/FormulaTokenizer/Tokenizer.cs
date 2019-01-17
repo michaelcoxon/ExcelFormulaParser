@@ -7,6 +7,7 @@ namespace ExcelFormulaParser.FormulaTokenizer
 {
     public class TokenizerOptions
     {
+        public ILanguage Language { get; set; } = BuiltinLanguages.English;
     }
 
     public class Tokenizer
@@ -15,7 +16,7 @@ namespace ExcelFormulaParser.FormulaTokenizer
         {
             options = options ?? new TokenizerOptions();
 
-            var language = new Language();
+            var language = options.Language;
 
             var tokens = new TokenCollection();
             var tokenStack = new TokenStack();

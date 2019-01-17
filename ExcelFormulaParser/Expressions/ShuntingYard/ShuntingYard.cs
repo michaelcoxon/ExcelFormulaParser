@@ -2,7 +2,7 @@
 
 namespace ExcelFormulaParser.Expressions.ShuntingYard
 {
-    public class ShuntingYard
+    internal class ShuntingYard
     {
         public Stack<Expression> operands = new Stack<Expression>();
         public Stack<Operator> operators = new Stack<Operator>();

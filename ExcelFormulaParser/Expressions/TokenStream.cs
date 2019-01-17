@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ExcelFormulaParser.Expressions
 {
-    public class TokenStream
+    internal class TokenStream
     {
         private readonly Token[] _arr;
         private int _index = 0;
@@ -21,7 +21,7 @@ namespace ExcelFormulaParser.Expressions
             this._index += 1;
             if (this._index >= this._arr.Length)
             {
-                throw new Exception("Invalid Syntax");
+                throw new InvalidSyntaxException(this.CharPos());
             }
         }
 
@@ -135,6 +135,11 @@ namespace ExcelFormulaParser.Expressions
         public int Pos()
         {
             return this._index;
+        }
+
+        public int CharPos()
+        {
+            return this._arr.Take(this._index).Sum(t => t.Value.Length)+1;
         }
     }
 }
