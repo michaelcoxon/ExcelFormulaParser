@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageProjectUrl>https://github.com/michaelcoxon/ExcelFormulaParser</PackageProjectUrl>
     <RepositoryUrl>https://github.com/michaelcoxon/ExcelFormulaParser.git</RepositoryUrl>
     <PackageIconUrl></PackageIconUrl>

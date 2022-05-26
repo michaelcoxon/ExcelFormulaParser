@@ -1,9 +1,4 @@
 ﻿using ExcelFormulaParser.FormulaTokenizer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace ExcelFormulaParserTests.FormulaTokenizer
@@ -81,6 +76,22 @@ namespace ExcelFormulaParserTests.FormulaTokenizer
                 new Token(",", TokenType.Argument),
                 new Token("3", TokenType.Operand, TokenSubType.Number),
                 new Token("", TokenType.Function, TokenSubType.Stop),
+                new Token("", TokenType.Function, TokenSubType.Stop),
+            };
+
+            TestHelper.AssertFormula(formula, expected);
+        }
+
+        [Fact]
+        public void TwoParamaterFunction()
+        {
+            var formula = "BLAHBALH(1, 2)";
+            var expected = new[]
+            {
+                new Token("BLAHBALH", TokenType.Function, TokenSubType.Start),
+                new Token("1", TokenType.Operand, TokenSubType.Number),
+                new Token(",", TokenType.Argument),
+                new Token("2", TokenType.Operand, TokenSubType.Number),
                 new Token("", TokenType.Function, TokenSubType.Stop),
             };
 

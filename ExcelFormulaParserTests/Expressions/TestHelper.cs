@@ -1,5 +1,6 @@
 ﻿using ExcelFormulaParser.Expressions;
 using System.Collections.Generic;
+using System.Text;
 using Xunit;
 
 namespace ExcelFormulaParserTests.Expressions
@@ -24,78 +25,149 @@ namespace ExcelFormulaParserTests.Expressions
         }
     }
 
-    public class TestExpressionVisitor : ExpressionVisitor
+    public class CallsTestExpressionVisitor : ExpressionVisitor
     {
         public List<Call> Calls { get; }
 
-        public TestExpressionVisitor()
+        public CallsTestExpressionVisitor()
         {
             this.Calls = new List<Call>();
         }
 
-        protected override void EnterBinaryExpression(BinaryExpression node)
+        protected override Expression VisitCell(CellExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterBinaryExpression), node));
+            this.Calls.Add(new Call(nameof(VisitCell), node));
+            return base.VisitCell(node);
         }
-        protected override void EnterCell(CellExpression node)
+
+        protected override Expression VisitCellRange(RangeExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterCell), node));
+            this.Calls.Add(new Call(nameof(VisitCellRange), node));
+            this.Visit(node.Left);
+            this.Visit(node.Right);
+
+            return base.VisitCellRange(node);
         }
-        protected override void EnterCellRange(RangeExpression node)
+
+        protected override Expression VisitFunction(FunctionExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterCellRange), node));
+            this.Calls.Add(new Call(nameof(VisitFunction), node));
+            foreach (var arg in node.Arguments)
+            {
+                this.Visit(arg);
+            }
+            return base.VisitFunction(node);
         }
-        protected override void EnterFunction(FunctionExpression node)
+
+        protected override Expression VisitNumber(NumberExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterFunction), node));
+            this.Calls.Add(new Call(nameof(VisitNumber), node));
+            return base.VisitNumber(node);
         }
-        protected override void EnterLogical(LogicalExpression node)
+
+        protected override Expression VisitText(TextExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterLogical), node));
+            this.Calls.Add(new Call(nameof(VisitText), node));
+            return base.VisitText(node);
         }
-        protected override void EnterNumber(NumberExpression node)
+
+        protected override Expression VisitLogical(LogicalExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterNumber), node));
+            this.Calls.Add(new Call(nameof(VisitLogical), node));
+            return base.VisitLogical(node);
         }
-        protected override void EnterText(TextExpression node)
+
+        protected override Expression VisitBinaryExpression(BinaryExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterText), node));
+            this.Calls.Add(new Call(nameof(VisitBinaryExpression), node));
+            this.Visit(node.Left);
+            this.Visit(node.Right);
+            return base.VisitBinaryExpression(node);
         }
-        protected override void EnterUnaryExpression(UnaryExpression node)
+
+        protected override Expression VisitUnaryExpression(UnaryExpression node)
         {
-            this.Calls.Add(new Call(nameof(EnterUnaryExpression), node));
-        }
-        protected override void ExitBinaryExpression(BinaryExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitBinaryExpression), node));
-        }
-        protected override void ExitCell(CellExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitCell), node));
-        }
-        protected override void ExitCellRange(RangeExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitCellRange), node));
-        }
-        protected override void ExitFunction(FunctionExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitFunction), node));
-        }
-        protected override void ExitLogical(LogicalExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitLogical), node));
-        }
-        protected override void ExitNumber(NumberExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitNumber), node));
-        }
-        protected override void ExitText(TextExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitText), node));
-        }
-        protected override void ExitUnaryExpression(UnaryExpression node)
-        {
-            this.Calls.Add(new Call(nameof(ExitUnaryExpression), node));
+            this.Visit(node.Operand);
+            this.Calls.Add(new Call(nameof(VisitUnaryExpression), node));
+            return base.VisitUnaryExpression(node);
         }
     }
+
+    public class StringBuilderExpressionVisitor : ExpressionVisitor
+    {
+        private readonly StringBuilder _stringBuilder;
+
+        public StringBuilderExpressionVisitor(StringBuilder stringBuilder)
+        {
+            this._stringBuilder = stringBuilder;
+        }
+
+        protected override Expression VisitCell(CellExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitCell), node));
+            this._stringBuilder.Append(node.Key);
+            return base.VisitCell(node);
+        }
+
+        protected override Expression VisitCellRange(RangeExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitCellRange), node));
+            this.Visit(node.Left);
+            this._stringBuilder.Append(":");
+            this.Visit(node.Right);
+
+            return base.VisitCellRange(node);
+        }
+
+        protected override Expression VisitFunction(FunctionExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitFunction), node));
+            foreach (var arg in node.Arguments)
+            {
+                this.Visit(arg);
+            }
+            return base.VisitFunction(node);
+        }
+
+        protected override Expression VisitNumber(NumberExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitNumber), node));
+            return base.VisitNumber(node);
+        }
+
+        protected override Expression VisitText(TextExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitText), node));
+            return base.VisitText(node);
+        }
+
+        protected override Expression VisitLogical(LogicalExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitLogical), node));
+            return base.VisitLogical(node);
+        }
+
+        protected override Expression VisitBinaryExpression(BinaryExpression node)
+        {
+            //this.Calls.Add(new Call(nameof(VisitBinaryExpression), node));
+            this.Visit(node.Left);
+            this.Visit(node.Right);
+            return base.VisitBinaryExpression(node);
+        }
+
+        protected override Expression VisitUnaryExpression(UnaryExpression node)
+        {
+            this.Visit(node.Operand);
+            //this.Calls.Add(new Call(nameof(VisitUnaryExpression), node));
+            return base.VisitUnaryExpression(node);
+        }
+    }
+
+    public class ExecuteExpressionVisitor : ExpressionVisitor
+    {
+        public ExecuteExpressionVisitor()
+        {
+        }
+    }
+
 }

@@ -1,10 +1,5 @@
 ﻿using ExcelFormulaParser.Expressions;
 using ExcelFormulaParser.FormulaTokenizer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace ExcelFormulaParserTests.Expressions
@@ -24,7 +19,7 @@ namespace ExcelFormulaParserTests.Expressions
         {
             var tree = ExpressionTreeBuilder.ParseFormula(Tokenizer.Tokenize("-SUM()"));
 
-            TestHelper.AssertExpression(tree, 
+            TestHelper.AssertExpression(tree,
                 Expression.UnaryExpression(
                     UnaryOperatorType.Negate,
                     Expression.FunctionCall("SUM")
@@ -40,7 +35,7 @@ namespace ExcelFormulaParserTests.Expressions
             TestHelper.AssertExpression(tree,
                 Expression.FunctionCall(
                     "SUM",
-                    Expression.Number(1)        
+                    Expression.Number(1)
                 )
             );
         }
@@ -95,7 +90,7 @@ namespace ExcelFormulaParserTests.Expressions
                         Expression.Number(2),
                         Expression.Number(3)
                     )
-                )                
+                )
             );
         }
 
